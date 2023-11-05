@@ -1,0 +1,72 @@
+{
+    "version": "2.0.0",
+    "runner": "terminal",
+    "type": "shell",
+    "echoCommand": true,
+    "presentation": {
+        "reveal": "always"
+    },
+    "tasks": [
+        //C++ 컴파일
+        {
+            "label": "save and compile for C++",
+            "command": "g++",
+            "args": [
+                "-g3",
+                "${workspaceFolder}/src/*.cc", // 모든 .c 파일 컴파일                // "${workspaceFolder}/BinFormat.c", // BinFormat.c 파일 추가
+                "-o",
+                "${workspaceFolder}/main",
+                "-I${workspaceFolder}/include"
+            ],
+            "group": "build",
+            "problemMatcher": {
+                "fileLocation": [
+                    "relative",
+                    "${workspaceRoot}"
+                ],
+                "pattern": {
+                    "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning error):\\s+(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    "severity": 4,
+                    "message": 5
+                }
+            }
+        },
+        {
+            "label": "save and compile for C",
+            "command": "gcc",
+            "args": [
+                "-g3",
+                "${workspaceFolder}/main.c", // 항상 main.c 파일을 컴파일,
+                "${workspaceFolder}/LogWrite.c", // LidarConfig.c 파일 추가
+                "${workspaceFolder}/BinFormat.c", // BinFormat.c 파일 추가
+                "${workspaceFolder}/initbuffer.c", // initbuffer.c 파일 추가
+                "${workspaceFolder}/LidarConfig.c", // LidarConfig.c 파일 추가
+                "${workspaceFolder}/LidarConfigVariable.c", // LidarConfig.c 파일 추가
+                "-o",
+                "${workspaceFolder}/main",
+                "-I${workspaceFolder}/include"
+            ],
+            "group": "build",
+            "problemMatcher": {
+                "owner": "cpp",
+                "fileLocation": "relative",
+                "pattern": {
+                    "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    "severity": 4,
+                    "message": 5
+                }
+            },
+        },
+        {
+            "label": "execute",
+            "command": "cd ${fileDirname} && ./${fileBasenameNoExtension}",
+            "group": "test"
+        },
+    ],
+}
