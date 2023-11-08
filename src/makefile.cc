@@ -118,28 +118,21 @@ void write_headerL00(BinDataInfo_t* file1, BinDataInfo_t* file2,
   Hinfo->minorVer = file1->header_Info.minorVer;
   Hinfo->calCnt = finfo1->calCnt + finfo2->calCnt;
   Hinfo->sensorCnt = finfo1->sensorCnt + finfo2->sensorCnt;
-  mergefile->lidarCnt = file1->lidarCnt + file2->lidarCnt;
+  mergefile->lidarCnt = Hinfo->calCnt;
   Hinfo->headerSz = sizeof(BinHeadInfo_t) +
-                    (sizeof(BinHeadSensor_t) * finfo1->sensorCnt) +
-                    (sizeof(BinHeadCal_t) * finfo1->calCnt) +
-                    (sizeof(BinHeadSensor_t) * finfo2->sensorCnt) +
-                    (sizeof(BinHeadCal_t) * finfo2->calCnt);
-  Hinfo->singleFrameSz = sizeof(BinFrameHead_t);
-  for (size_t i = 0; i < Hinfo->sensorCnt; i++) {
-    if (i < mergefile->lidarCnt) {
-      Hinfo->singleFrameSz +=
-        (file1->header_sensor[i].frameSz + file2->header_sensor[i].frameSz);
-    } else {
-      Hinfo->singleFrameSz +=
-        (file1->header_sensor[i - file1->lidarCnt].frameSz +
-         file2->header_sensor[i - file2->lidarCnt].frameSz);
-    }
-  }
+                    (sizeof(BinHeadSensor_t) * Hinfo->sensorCnt) +
+                    (sizeof(BinHeadCal_t) * Hinfo->calCnt);
+
+  Hinfo->singleFrameSz = file1->header_Info.singleFrameSz +
+                         file2->header_Info.singleFrameSz -
+                         sizeof(BinFrameHead_t);
+
   if (file1->frameNum <= file2->frameNum) {
     mergefile->frameNum = file1->frameNum;
   } else {
     mergefile->frameNum = file2->frameNum;
   }
+
   sprintf(Hinfo->str,
           "major: %d, minor: %d, header size: %d, sensor cnt: %d, cal cnt: %d "
           "single frame "
@@ -161,91 +154,118 @@ void write_headerL00(BinDataInfo_t* file1, BinDataInfo_t* file2,
     std::clog << "success !! header_Info write" << endl;
   }
   /************************************************************************/
+
   // write sensor header
-  for (size_t i = 0; i < file1->header_Info.sensorCnt; i++) {
-    BinHeadSensor_t* sheader = &mergefile->header_sensor[i];
-    if (isSensorId(file1->header_sensor[i].sensorId)) {
-      memcpy(&mergefile->header_sensor[i], &file1->header_sensor[i],
-             sizeof(BinHeadSensor_t));
-      r = fwrite(&mergefile->header_sensor[i], sizeof(BinHeadSensor_t), 1,
-                 mergefile->filePtr);
-      fflush(mergefile->filePtr);
-
-    } else {
-      mergefile->header_sensor[i].sensorId = 0;
-      std::strncpy(mergefile->header_sensor[i].subId, "not_lidar",
-                   SENSOR_NAME_LEN);
-
-      r = fwrite(&mergefile->header_sensor[i], sizeof(BinHeadSensor_t), 1,
-                 mergefile->filePtr);
-      fflush(mergefile->filePtr);
-    }
+  memcpy(mergefile->header_sensor, file1->header_sensor,
+         sizeof(BinHeadSensor_t) * file1->lidarCnt);
+  memcpy(&mergefile->header_sensor[file1->lidarCnt], file2->header_sensor,
+         sizeof(BinHeadSensor_t) * file2->lidarCnt);
+  for (size_t i = 0; i < mergefile->lidarCnt; i++) {
+    memset(mergefile->header_sensor[i].subId, 0,
+           sizeof(mergefile->header_sensor[i].subId));
+    sprintf(mergefile->header_sensor[i].subId, "#%02ld", i);
   }
-  for (size_t i = file1->header_Info.sensorCnt;
-       i < file1->header_Info.sensorCnt + file2->header_Info.sensorCnt; i++) {
-    BinHeadSensor_t* sheader = &mergefile->header_sensor[i];
+  r = fwrite(&mergefile->header_sensor,
+             sizeof(BinHeadSensor_t) * mergefile->lidarCnt, 1,
+             mergefile->filePtr);
+  fflush(mergefile->filePtr);
 
-    if (isSensorId(
-          file2->header_sensor[i - file1->header_Info.sensorCnt].sensorId)) {
-      memcpy(&mergefile->header_sensor[i],
-             &file2->header_sensor[i - file1->header_Info.sensorCnt],
-             sizeof(BinHeadSensor_t));
-      r = fwrite(&mergefile->header_sensor[i], sizeof(BinHeadSensor_t), 1,
-                 mergefile->filePtr);
-      fflush(mergefile->filePtr);
+  memcpy(mergefile->header_cal, file1->header_cal,
+         sizeof(BinHeadSensor_t) * file1->lidarCnt);
+  memcpy(&mergefile->header_cal[file1->lidarCnt], file2->header_cal,
+         sizeof(BinHeadSensor_t) * file2->lidarCnt);
+  r = fwrite(&mergefile->header_cal, sizeof(BinHeadCal_t) * mergefile->lidarCnt,
+             1, mergefile->filePtr);
+  fflush(mergefile->filePtr);
+  //                mergefile->filePtr);
+  // for (size_t i = 0; i < file1->header_Info.sensorCnt; i++) {
+  //   BinHeadSensor_t* sheader = &mergefile->header_sensor[i];
+  //   if (isSensorId(file1->header_sensor[i].sensorId)) {
+  //     memcpy(&mergefile->header_sensor[i], &file1->header_sensor[i],
+  //            sizeof(BinHeadSensor_t));
+  //     r = fwrite(&mergefile->header_sensor[i], sizeof(BinHeadSensor_t), 1,
+  //                mergefile->filePtr);
+  //     fflush(mergefile->filePtr);
 
-    } else {
-      mergefile->header_sensor[i].sensorId = 0;
-      std::strncpy(mergefile->header_sensor[i].subId, "not_lidar",
-                   SENSOR_NAME_LEN);
+  //   } else {
+  //     mergefile->header_sensor[i].sensorId = 0;
+  //     std::strncpy(mergefile->header_sensor[i].subId, "not_lidar",
+  //                  SENSOR_NAME_LEN);
 
-      r = fwrite(&mergefile->header_sensor[i], sizeof(BinHeadSensor_t), 1,
-                 mergefile->filePtr);
-      fflush(mergefile->filePtr);
-    }
-  }
-  if (!r) {
-    std::cerr << "fail!! header_sensor write at: " << __FILE__ << ":"
-              << __LINE__ << ": " << strerror(errno) << endl;
-    exit(EXIT_FAILURE);
-  } else {
-    std::clog << "success !! header_sensor write" << endl;
-  }
-  /************************************************************************/
-  // read cal header
-  for (size_t i = 0; i < file1->lidarCnt; i++) {
-    BinHeadCal_t* cheader = &mergefile->header_cal[i];
-    memcpy(&mergefile->header_cal[i], &file1->header_cal[i],
-           sizeof(BinHeadCal_t));
-    sprintf(cheader->str, "calibration - id: #%d",
-            mergefile->header_sensor[i].sensorId);
+  //     r = fwrite(&mergefile->header_sensor[i], sizeof(BinHeadSensor_t), 1,
+  //                mergefile->filePtr);
+  //     fflush(mergefile->filePtr);
+  //   }
+  // }
+  // for (size_t i = file1->header_Info.sensorCnt;
+  //      i < file1->header_Info.sensorCnt + file2->header_Info.sensorCnt; i++)
+  //      {
+  //   BinHeadSensor_t* sheader = &mergefile->header_sensor[i];
 
-    r = fwrite(&mergefile->header_cal[i], sizeof(BinHeadCal_t), 1,
-               mergefile->filePtr);
+  //   if (isSensorId(
+  //         file2->header_sensor[i - file1->header_Info.sensorCnt].sensorId)) {
+  //     memcpy(&mergefile->header_sensor[i],
+  //            &file2->header_sensor[i - file1->header_Info.sensorCnt],
+  //            sizeof(BinHeadSensor_t));
+  //     r = fwrite(&mergefile->header_sensor[i], sizeof(BinHeadSensor_t), 1,
+  //                mergefile->filePtr);
+  //     fflush(mergefile->filePtr);
 
-    fflush(mergefile->filePtr);
-  }
-  for (size_t i = file1->lidarCnt; i < file1->lidarCnt + file2->lidarCnt; i++) {
-    BinHeadCal_t* cheader = &mergefile->header_cal[i];
-    memcpy(&mergefile->header_cal[i], &file2->header_cal[i - file1->lidarCnt],
-           sizeof(BinHeadCal_t));
-    sprintf(cheader->str, "calibration - id: #%d",
-            mergefile->header_sensor[i].sensorId);
+  //   } else {
+  //     mergefile->header_sensor[i].sensorId = 0;
+  //     std::strncpy(mergefile->header_sensor[i].subId, "not_lidar",
+  //                  SENSOR_NAME_LEN);
 
-    r = fwrite(&mergefile->header_cal[i], sizeof(BinHeadCal_t), 1,
-               mergefile->filePtr);
-    fflush(mergefile->filePtr);
-  }
+  //     r = fwrite(&mergefile->header_sensor[i], sizeof(BinHeadSensor_t), 1,
+  //                mergefile->filePtr);
+  //     fflush(mergefile->filePtr);
+  //   }
+  // }
+  // if (!r) {
+  //   std::cerr << "fail!! header_sensor write at: " << __FILE__ << ":"
+  //             << __LINE__ << ": " << strerror(errno) << endl;
+  //   exit(EXIT_FAILURE);
+  // } else {
+  //   std::clog << "success !! header_sensor write" << endl;
+  // }
+  // /************************************************************************/
+  // // read cal header
+  // for (size_t i = 0; i < file1->lidarCnt; i++) {
+  //   BinHeadCal_t* cheader = &mergefile->header_cal[i];
+  //   memcpy(&mergefile->header_cal[i], &file1->header_cal[i],
+  //          sizeof(BinHeadCal_t));
+  //   sprintf(cheader->str, "calibration - id: #%d",
+  //           mergefile->header_sensor[i].sensorId);
 
-  // write cal header
+  //   r = fwrite(&mergefile->header_cal[i], sizeof(BinHeadCal_t), 1,
+  //              mergefile->filePtr);
 
-  if (!r) {
-    std::cerr << "fail!! header_cal write at: " << __FILE__ << ":" << __LINE__
-              << ": " << strerror(errno) << endl;
-    exit(EXIT_FAILURE);
-  } else {
-    std::clog << "success !! header_cal write" << endl;
-  }
+  //   fflush(mergefile->filePtr);
+  // }
+  // for (size_t i = file1->lidarCnt; i < file1->lidarCnt + file2->lidarCnt;
+  // i++) {
+  //   BinHeadCal_t* cheader = &mergefile->header_cal[i];
+  //   memcpy(&mergefile->header_cal[i], &file2->header_cal[i -
+  //   file1->lidarCnt],
+  //          sizeof(BinHeadCal_t));
+  //   sprintf(cheader->str, "calibration - id: #%d",
+  //           mergefile->header_sensor[i].sensorId);
+
+  //   r = fwrite(&mergefile->header_cal[i], sizeof(BinHeadCal_t), 1,
+  //              mergefile->filePtr);
+  //   fflush(mergefile->filePtr);
+  // }
+
+  // // write cal header
+
+  // if (!r) {
+  //   std::cerr << "fail!! header_cal write at: " << __FILE__ << ":" <<
+  //   __LINE__
+  //             << ": " << strerror(errno) << endl;
+  //   exit(EXIT_FAILURE);
+  // } else {
+  //   std::clog << "success !! header_cal write" << endl;
+  // }
 }
 void write_headerL11(LegacyBinFileInfo_t* file1, LegacyBinFileInfo_t* file2,
                      BinDataInfo_t* convertBinFileInf1,
@@ -265,8 +285,7 @@ void write_headerL10(LegacyBinFileInfo_t* file1, BinDataInfo_t* file2,
 }
 void _write_frameL00(BinDataInfo_t* input_F, BinDataInfo_t* input_F2,
                      uint8_t* framedata1, uint8_t* framedata2) {
-  write_frameL00(input_F, input_F2, merged_File, framedata1, framedata2);
-  memset(data1)
+  // write_frameL00(input_F, input_F2, merged_File, framedata1, framedata2);
 }
 
 void write_frameL00(BinDataInfo_t* file1, BinDataInfo_t* file2,

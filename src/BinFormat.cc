@@ -1,5 +1,6 @@
 #include "BinFormat.h"
 
+#include <memory>
 bool isSensorId(uint32_t id) {
   if (id < LIDAR_SENSOR_ID_MIN || id > LIDAR_SENSOR_ID_MAX) {
     return false;
@@ -59,35 +60,54 @@ void read_BinHeader(BinDataInfo_t* input_F) {
          << ", yaw: " << input_F->header_cal[i].yaw << endl;
   }
 }
+#define FRAME_MARKER "frame"
 
-void read_FrameData(BinDataInfo_t* input_F, BinDataInfo_t* input_F2,
-                    uint8_t* framedata1[], uint8_t* framedata2[]) {
+void read_FrameData(BinDataInfo_t* src1, BinDataInfo_t* src2,
+                    BinDataInfo_t* temp) {
+  std::unique_ptr<char[]> framedata1(new char[src1->header_Info.singleFrameSz]);
+  std::unique_ptr<char[]> framedata2(new char[src2->header_Info.singleFrameSz]);
+
   BinFrameHead_t frameHead;
   uint16_t r = 0;
-  uint64_t headerOfs = input_F->header_Info.headerSz;
-  fseeko(input_F->filePtr, headerOfs, SEEK_SET);
+  for (size_t i = 0; i < src1->frameNum; i++) {
+    uint64_t offs1 =
+      src1->header_Info.headerSz + src1->header_Info.singleFrameSz * i;
+    uint64_t offs2 =
+      src2->header_Info.headerSz + src2->header_Info.singleFrameSz * i;
+    fseeko(src1->filePtr, offs1, SEEK_SET);
+    fseeko(src1->filePtr, offs2, SEEK_SET);
 
-  for (size_t i = 0; i < input_F->header_Info.sensorCnt; i++) {
-    framedata1[i] = (uint8_t*)malloc(input_F->header_sensor[i].frameSz);
-  }
+    strcpy(frameHead.frameMarker, FRAME_MARKER);
+    frameHead.frameNum = i;
+    sprintf(frameHead.str, "#%d", frameHead.frameNum);
 
-  for (size_t i = 0; i < input_F->frameNum; i++) {
-    r = fread(&frameHead, sizeof(frameHead), 1, input_F->filePtr);
+    r = fwrite(&frameHead, sizeof(frameHead), 1, temp->filePtr);
+
     if (r != 1) {
       cerr << "Error reading frame header at " << __FILE__ << ":" << __LINE__
            << ": " << strerror(errno) << endl;
       exit(EXIT_FAILURE);
     }
-    for (size_t j = 0; j < input_F->header_Info.sensorCnt; j++) {
-      r = fread(framedata1[j], input_F->header_sensor[j].frameSz, 1,
-                input_F->filePtr);
+
+    for (size_t j = 0; j < src1->header_Info.sensorCnt; j++) {
+      r = fread(framedata1.get(), src1->header_Info.singleFrameSz, 1,
+                src1->filePtr);
+      r = fread(framedata2.get(), src2->header_Info.singleFrameSz, 1,
+                src2->filePtr);
 
       if (r != 1) {
         cerr << "Error reading sensor data for sensor " << j << " at "
              << __FILE__ << ":" << __LINE__ << ": " << strerror(errno) << endl;
         exit(EXIT_FAILURE);
       }
-      _write_frameL00(input_F, input_F2, framedata1, framedata2);
+
+      r = fwrite(&framedata1[sizeof(frameHead)],
+                 src1->header_Info.singleFrameSz - sizeof(frameHead),
+                 1, temp->filePtr);
+      r = fwrite(&framedata2[sizeof(frameHead)],
+                 src2->header_Info.singleFrameSz - sizeof(frameHead),
+                 1, temp->filePtr);
+      // _write_frameL00(src1, src2, framedata1, framedata2);
     }
   }
 }

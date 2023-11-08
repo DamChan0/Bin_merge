@@ -83,8 +83,8 @@ void make_newFile(BinDataInfo_t* newfile, char* mergeFlag);
 void init_Header(BinDataInfo_t* input_file);
 
 void read_BinHeader(BinDataInfo_t* input_file);
-void read_FrameData(BinDataInfo_t* input_file, uint8_t* data[]);
-
+void read_FrameData(BinDataInfo_t* src1, BinDataInfo_t* src2,
+                    BinDataInfo_t* temp);
 void write_HeaderInfo(BinDataInfo_t* input_file);
 void write_SeneorHeader(BinDataInfo_t* input_file);
 void write_CalInfo(BinDataInfo_t* input_file);

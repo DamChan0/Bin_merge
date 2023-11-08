@@ -41,8 +41,6 @@ int openfile(char* filePath1, char* filePath2) {
 }
 
 int main(int argc, char* argv[]) {
-  memset(framedata1, 0, sizeof(framedata1));
-  memset(framedata2, 0, sizeof(framedata2));
   char senNumStr[1024] = {'\0'};
   if (argc < 3) {
     cout << "Please provide two file names."
@@ -90,99 +88,104 @@ int main(int argc, char* argv[]) {
   inputFile1.read(binVersion1, sizeof(binVersion1));
   inputFile2.read(binVersion2, sizeof(binVersion2));
 
+  BinDataInfo_t temp;
   // check version and make legacy branch
-  if (((BinHeadInfo_t*)binVersion1)->majorVer == 1) {
-    cout << "Bin1 not legacy file!!"
-         << "\n";
-    inputFile1.close();
-    // file pointer 적용 맞는 structure에 적용
+  // if (((BinHeadInfo_t*)binVersion1)->majorVer == 1) {
+  // cout << "Bin1 not legacy file!!"
+  //      << "\n";
+  inputFile1.close();
+  // file pointer 적용 맞는 structure에 적용
 
-    strcpy(bin_File1.filePath, filePath1);
-    bin_File1.filePtr = fopen(bin_File1.filePath, "r");
+  strcpy(bin_File1.filePath, filePath1);
+  strcpy(bin_File2.filePath, filePath2);
+  bin_File1.filePtr = fopen(bin_File1.filePath, "r");
+  bin_File2.filePtr = fopen(bin_File2.filePath, "r");
+  make_fileL00(&bin_File1, &bin_File2, &temp);
+  read_BinHeader(&bin_File1);
+  read_BinHeader(&bin_File2);
+  write_headerL00(&bin_File1, &bin_File2, &temp);
+  read_FrameData(&bin_File1, &bin_File2, &temp);
 
-    read_BinHeader(&bin_File1);
-    read_FrameData(&bin_File1, framedata1);
+  // } else if (((LegacyBinHead_t*)binVersion1)->ver > BIN_LEG_VER_1 &&
+  //            ((LegacyBinHead_t*)binVersion1)->ver < BIN_LEG_VER_MAX) {
+  //   cout << "Bin Leagcy file1!!"
+  //        << "\n";
 
-  } else if (((LegacyBinHead_t*)binVersion1)->ver > BIN_LEG_VER_1 &&
-             ((LegacyBinHead_t*)binVersion1)->ver < BIN_LEG_VER_MAX) {
-    cout << "Bin Leagcy file1!!"
-         << "\n";
+  //   legFlag1 = true;
+  //   leg_bin_File1.filePath = filePath1;
+  //   leg_bin_File1.file = &inputFile1;
+  //   leg_bin_File1.ver = (eLegacyBinVer)((LegacyBinHead_t*)binVersion1)->ver;
+  //   leg_bin_File1.defInfo = getBinLegacyElementInfo(leg_bin_File1.ver);
+  //   cout << "lidar num: " << leg_bin_File1.defInfo->lidarCnt << endl;
+  //   inputFile1.seekg(0, ios::end);
+  //   leg_bin_File1.fileSz = inputFile1.tellg();
 
-    legFlag1 = true;
-    leg_bin_File1.filePath = filePath1;
-    leg_bin_File1.file = &inputFile1;
-    leg_bin_File1.ver = (eLegacyBinVer)((LegacyBinHead_t*)binVersion1)->ver;
-    leg_bin_File1.defInfo = getBinLegacyElementInfo(leg_bin_File1.ver);
-    cout << "lidar num: " << leg_bin_File1.defInfo->lidarCnt << endl;
-    inputFile1.seekg(0, ios::end);
-    leg_bin_File1.fileSz = inputFile1.tellg();
+  //   inputFile1.seekg(sizeof(LegacyBinHead_t), ios::beg);
+  //   readLegacyBinHeader(&leg_bin_File1);
+  //   readLegacyBinLidarCal(*leg_bin_File1.file,
+  //   leg_bin_File1.defInfo->lidarCnt); indexingLegacyBin(&leg_bin_File1);
+  //   setSensorIdFromString(senNumStr, &leg_bin_File1);
 
-    inputFile1.seekg(sizeof(LegacyBinHead_t), ios::beg);
-    readLegacyBinHeader(&leg_bin_File1);
-    readLegacyBinLidarCal(*leg_bin_File1.file, leg_bin_File1.defInfo->lidarCnt);
-    indexingLegacyBin(&leg_bin_File1);
-    setSensorIdFromString(senNumStr, &leg_bin_File1);
+  //   // // set new bin header
+  //   // inputFile.seekg(0, ios::beg);
+  //   // binHeadInitFromLegacyBin(&convertBinFileInf, &leg_bin_File1);
+  //   // binSenserHeadInitFromLegacyBin(&convertBinFileInf, &leg_bin_File1);
+  //   // binSetCalInitFromLegacyBin(&convertBinFileInf, &leg_bin_File1);
+  //   // binWriteBodyFromLegacyBin(&convertBinFileInf, &leg_bin_File1);
 
-    // // set new bin header
-    // inputFile.seekg(0, ios::beg);
-    // binHeadInitFromLegacyBin(&convertBinFileInf, &leg_bin_File1);
-    // binSenserHeadInitFromLegacyBin(&convertBinFileInf, &leg_bin_File1);
-    // binSetCalInitFromLegacyBin(&convertBinFileInf, &leg_bin_File1);
-    // binWriteBodyFromLegacyBin(&convertBinFileInf, &leg_bin_File1);
+  //   // convertBinFileInf.ofile.close();
+  //   // leg_bin_File1.file->close();
 
-    // convertBinFileInf.ofile.close();
-    // leg_bin_File1.file->close();
+  //   // strcpy(binFileInf.fileName, convertBinFileInf.fileName);
+  //   // newBinFileInf.lidarNum = desiredNum;
+  //   // volumeUpBinFile(&binFileInf, &newBinFileInf);
+  // }
 
-    // strcpy(binFileInf.fileName, convertBinFileInf.fileName);
-    // newBinFileInf.lidarNum = desiredNum;
-    // volumeUpBinFile(&binFileInf, &newBinFileInf);
-  }
+  // if (((BinHeadInfo_t*)binVersion2)->majorVer == 1) {
+  //   cout << "Bin2 not legacy file!!"
+  //        << "\n";
+  //   inputFile2.close();
+  //   // file pointer 적용 맞는 structure에 적용
 
-  if (((BinHeadInfo_t*)binVersion2)->majorVer == 1) {
-    cout << "Bin2 not legacy file!!"
-         << "\n";
-    inputFile2.close();
-    // file pointer 적용 맞는 structure에 적용
+  //   strcpy(bin_File2.filePath, filePath2);
+  //   bin_File2.filePtr = fopen(bin_File2.filePath, "r");
 
-    strcpy(bin_File2.filePath, filePath2);
-    bin_File2.filePtr = fopen(bin_File2.filePath, "r");
+  //   read_BinHeader(&bin_File2);
+  //   read_FrameData(&bin_File2, framedata2);
 
-    read_BinHeader(&bin_File2);
-    read_FrameData(&bin_File2, framedata2);
+  // } else if (((LegacyBinHead_t*)binVersion2)->ver > BIN_LEG_VER_1 &&
+  //            ((LegacyBinHead_t*)binVersion2)->ver < BIN_LEG_VER_MAX) {
+  //   cout << "Bin2 Leagcy file!!"
+  //        << "\n";
 
-  } else if (((LegacyBinHead_t*)binVersion2)->ver > BIN_LEG_VER_1 &&
-             ((LegacyBinHead_t*)binVersion2)->ver < BIN_LEG_VER_MAX) {
-    cout << "Bin2 Leagcy file!!"
-         << "\n";
+  //   legFlag2 = true;
+  //   leg_bin_File2.filePath = filePath1;
+  //   leg_bin_File2.file = &inputFile2;
+  //   leg_bin_File2.ver = (eLegacyBinVer)((LegacyBinHead_t*)binVersion2)->ver;
+  //   leg_bin_File2.defInfo = getBinLegacyElementInfo(leg_bin_File2.ver);
+  //   cout << "lidar num: " << leg_bin_File2.defInfo->lidarCnt << endl;
+  //   inputFile2.seekg(0, ios::end);
+  //   leg_bin_File2.fileSz = inputFile2.tellg();
+  // }
 
-    legFlag2 = true;
-    leg_bin_File2.filePath = filePath1;
-    leg_bin_File2.file = &inputFile2;
-    leg_bin_File2.ver = (eLegacyBinVer)((LegacyBinHead_t*)binVersion2)->ver;
-    leg_bin_File2.defInfo = getBinLegacyElementInfo(leg_bin_File2.ver);
-    cout << "lidar num: " << leg_bin_File2.defInfo->lidarCnt << endl;
-    inputFile2.seekg(0, ios::end);
-    leg_bin_File2.fileSz = inputFile2.tellg();
-  }
+  // if (!legFlag1 && !legFlag2) {
+  //   std::cout << "\n";
+  //   std::cout << "merge version is not Leagcay1";
 
-  if (!legFlag1 && !legFlag2) {
-    std::cout << "\n";
-    std::cout << "merge version is not Leagcay1";
+  //   merge_BinFile_L00(&bin_File1, &bin_File2, &merged_File, framedata1,
+  //                     framedata2);
+  // } else if (legFlag1 && legFlag2) {
+  //   merge_BinFile_L11(&leg_bin_File1, &leg_bin_File2, &convertBinFileInf1,
+  //                     &convertBinFileInf1, &merged_File);
 
-    merge_BinFile_L00(&bin_File1, &bin_File2, &merged_File, framedata1,
-                      framedata2);
-  } else if (legFlag1 && legFlag2) {
-    merge_BinFile_L11(&leg_bin_File1, &leg_bin_File2, &convertBinFileInf1,
-                      &convertBinFileInf1, &merged_File);
+  // } else if (legFlag1 && !legFlag2) {
+  //   merge_BinFile_L10(&leg_bin_File1, &bin_File2, &convertBinFileInf1,
+  //                     &merged_File);
 
-  } else if (legFlag1 && !legFlag2) {
-    merge_BinFile_L10(&leg_bin_File1, &bin_File2, &convertBinFileInf1,
-                      &merged_File);
-
-  } else if (!legFlag1 && legFlag2) {
-    merge_BinFile_L01(&bin_File1, &leg_bin_File2, &convertBinFileInf1,
-                      &merged_File);
-  }
+  // } else if (!legFlag1 && legFlag2) {
+  //   merge_BinFile_L01(&bin_File1, &leg_bin_File2, &convertBinFileInf1,
+  //                     &merged_File);
+  // }
 
   // mergeBinFile(&filePath1, &filePath2);
   // make new file and open file

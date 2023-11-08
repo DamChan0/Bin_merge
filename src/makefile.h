@@ -27,7 +27,8 @@ void make_fileL01(BinDataInfo_t* file1, LegacyBinFileInfo_t* file2,
 void make_fileL10(LegacyBinFileInfo_t* file1, BinDataInfo_t* file2,
                   BinDataInfo_t* mergefile);
 
-void write_headerL00(BinDataInfo_t* file1, BinDataInfo_t* file2);
+void write_headerL00(BinDataInfo_t* file1, BinDataInfo_t* file2,
+                     BinDataInfo_t* temp);
 void write_headerL11(LegacyBinFileInfo_t* file1, LegacyBinFileInfo_t* file2,
                      BinDataInfo_t* convertBinFileInf1,
                      BinDataInfo_t* convertBinFileInf2,
