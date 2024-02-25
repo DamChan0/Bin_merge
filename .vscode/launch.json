@@ -5,50 +5,17 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "type": "lldb",
-      "request": "launch",
-      "name": "Debug",
-      "program": "${workspaceFolder}/build/BinMerge",
-      "args": [
-        "-d",
-        "-2/home/dongmin/logdata/1.bin",
-        "-1/home/dongmin/logdata/t02.bin",
-      ],
-<<<<<<< HEAD
-      "cwd": "${workspaceFolder}"
-=======
-      "stopAtEntry": false,
-      "cwd": "${workspaceFolder}",
-      "environment": [],
-      "externalConsole": false,
-      "MIMode": "gdb",
-      "setupCommands": [
-        {
-          "description": "Enable pretty-printing for gdb",
-          "text": "-enable-pretty-printing",
-          "ignoreFailures": true
-        }
-      ]
-    },
-    {
-      "name": "C/C++ Runner: Debug Session",
       "type": "cppdbg",
       "request": "launch",
-      "args": [],
-      "stopAtEntry": false,
-      "externalConsole": false,
-      "cwd": "/home/dongmin/dong/git/src",
-      "program": "/home/dongmin/dong/git/src/build/Debug/outDebug",
-      "MIMode": "gdb",
-      "miDebuggerPath": "gdb",
-      "setupCommands": [
-        {
-          "description": "Enable pretty-printing for gdb",
-          "text": "-enable-pretty-printing",
-          "ignoreFailures": true
-        }
-      ]
->>>>>>> 050b1bfda6b2c40ae32ce0ef60e2c4b0abc8fa91
+      "name": "Debug",
+      "program": "${workspaceFolder}/build/MergeLidar",
+      "args": [
+
+      ],
+      "cwd": "${workspaceFolder}",
+      "visualizerFile": "/home/dmkim/.config/Code/User/workspaceStorage/b64ba493fbbbee3b5568bb345a435e44/tonka3000.qtvsctools/qt.natvis.xml"
     }
   ]
 }
+
+

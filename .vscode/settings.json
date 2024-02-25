@@ -68,7 +68,19 @@
         "cinttypes": "cpp",
         "typeindex": "cpp",
         "typeinfo": "cpp",
-        "cctype": "cpp"
+        "variant": "cpp",
+        "ranges": "cpp",
+        "hash_map": "cpp",
+        "hash_set": "cpp",
+        "qapplication": "cpp",
+        "qmainwindow": "cpp",
+        "future": "cpp",
+        "qprocess": "cpp",
+        "qpushbutton": "cpp",
+        "qtextedit": "cpp",
+        "qboxlayout": "cpp"
     },
-    "C_Cpp.default.compilerPath": "/usr/bin/gcc-11"
+    "C_Cpp.default.compilerPath": "/usr/bin/g++-11",
+    "cmake.configureOnOpen": true,
+    "cmake.sourceDirectory": "C:/Users/Damchan/Bin_merge/BinMerge"
 }

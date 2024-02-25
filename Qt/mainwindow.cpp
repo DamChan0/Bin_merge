@@ -211,11 +211,6 @@ MainWindow::MainWindow(QWidget* parent)
           });
 
   connect(ui->launchButton, &QPushButton::clicked, this, &MainWindow::launch);
-
-  QString imagePath =
-    QCoreApplication::applicationDirPath() + "/../Qt/image/vueron.png";
-  QPixmap pixmap(imagePath);
-  ui->image_label->setPixmap(pixmap);
 }
 
 MainWindow::~MainWindow() { delete ui; }
