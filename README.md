@@ -4,57 +4,71 @@
 
 # 빌드
 ```shell
+mkdir build
 cmake -S. -B build
-
 cmake --build build
 ```
+<br/><br/>
 
 # 프로그램 실행
-## VueSystem에서 취득한 로그데이터
-- BinMerge -option -1 [filePath1] -2 [filePath2] 
-``` shell
-    - option
-        - f: timestamp 상관없이 프레임 순서로 합치는 옵션
-        - t: tiemstamp 고려하여 가장 가까운 프레임 끼리 합치는 옵션
-        - s<frameNum>: 파일을 하나만 입력 할 수 있다 , 파일의 길이를 원하는 프레임 수로 줄이는 옵션
-    
-    - 지원 버전 및 파일 수 
-        - f : 3개이상 파일 입력 지원 , 3개 이상 입력은 동일 버전 파일들만 입력 가능 현재 2.1버전 지원  2,0 버전 지원 예정
-        - t : 2개 파일 만 입력 가능 , 현재 2.1버전 입력 가능 2.0 버전 지원 예정
-        - s : 1개 파일 만 입력 가능 , 현재 2.1버전 입력 가능 2.0 버전 및 1.2 버전 지원 예정
+### VueSystem에서 취득한 로그데이터 필요(Binversion 2.1 권장)
+빌드 후 다음 커맨드 실행 
+```    
+cd build
+./MergeLidar
 ```      
-#
-- BinMerge -f/t -1 [filePath1] -2 [filePath2] -3 [filePath3] -4 [filePath4] .... -9 [filePath9] 
 
-    총 9개의 파일을 병합할 수 있습니다.  
-    2개 파일 까지는 f/f -option이 작동하지만 3개 이상은 어떤 옵션을 입력해도 force mode 로 병합이 됩니다.  
-    #
-- example
-    ```
-    ./BinMerge -f -1 ~/data/path/filename1 -2 ~/data/path/filename2 ....
-    ./BinMerge -t -1 ~/data/path/filename1 -2 ~/data/path/filename2 .....
-    ./BinMerge -s100 ~/data/path/filename1
-    ```
-- output
-    ```
-    - {Force 또는 Match_Time 또는 Split}_hh_mm_ss_ms.bin
-        mergeOption 1 = Force
-        mergeOption 2 = Match_Time
-        mergeOption 3 = Split
-    ```
+<br/><br/>
+
+# 병합 및 분할 
+### force mode
+- option을 force mode로 선택
+- 최대 9개의 파일을 병합할 수 있습니다.
+- fileNum 버튼을 통해서 file 개수를 입력하면 해당 숫자 만큼 파일 선택 창이 만들어집니다.
+
+### TimeCompare 
+ - 두파일의 timeStamp를 비교하여 10분이내로 차이가는 파일에 한하여 같은시간 저장된 프레임 끼리 병합합니다
+ - Binversion 2.1에 한하여 가능 합니다. 
+
+### Split 
+ - 하나의 파일에서 원하는 구간을 분할 하는 기능입니다
+
+### Frame Range 
+- 분할 및 병합 시 해당 파일에서 원하는 프레임 구간에서 프로그램이 실행 되도록 설정 할 수 있습니다
+- TimeCompare 모드로 실행할 경우 설정하지 않는 것을 권장합니다
+
+### output
+  - Force 또는 Match_Time 
+
+    - merge_{timestamp}.bin
+
+    ex) merged_20240226143527.bin
+
+- split 
+
+    - splitd_file{timestamp}.bin
+    
+    ex) splited_file2024_02_01_01_28_45
+    
+
         
+### Debug Log
+  option 선택시 => Force, TimeCompare, Split 출력
+
+
+  병합 및 분할 완료 시 => "Merge && Split is Done" 출력  
+  #
+
+<br/><br/><br/><br/>
+# 사용상법 및 동작 영상
+참고 링크 :  https://vueron.atlassian.net/wiki/spaces/Vueron/pages/196378826/Merge+Lidar
 
 
 
+<br/>
+<br/><br/><br/>
 
-## Debug Log
-    - correct : 파일간의 겹치는 시간이 존재하며 합칠 수 있는 상태
-    - warring : time diifernce is exist  = 두 파일간에 겹치는 시간이 존재하지 않음 
-                이경우 merge를 진행해도 하나의 파일은 멈춰있음
-    - ERROR : 두 파일의 첫프레임 격차가 5분이상/ option에 맞지 않은 파일 갯수를 입력 했을 경우
-              프로세스 종료 
-
-#변경사항
+# 변경사항
 ```
     - 11.14 
         - Binformat이 2.0으로 변경되면서 해당 버전 지원 하기 위해서 함수 추가 및 분기 추가
@@ -80,11 +94,18 @@ cmake --build build
         - multi file merge 기능 추가
             3개이상 9개 이하의 파일/ 총20개 까지의 라이다 데이터를 병합할 수 있도록 기능 추가 
 
-    - 02.
-        - OOP 방식으로 변경 중 
-        - merge 
+    - 02.26
+        - OOP 방식으로 변경
+        - merge 기능 구현
             - force 모드는 여러개 가능 
             - matching time 모드는 2개씩 가능 
-        - Split은 
+        - Split 기능 구형
             - 1개만 가능
+        - frame Range 추가
+            - 원하는 구간에 한하여 프로그램 실행 가능
+        - Qt Gui 추가
+        - CMake 구성 
+        - ui styleSheet 변경
+        - readMe 및 컨플루언스 사용 가이드 업데이트
+         
 ```
