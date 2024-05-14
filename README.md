@@ -60,10 +60,6 @@ cd build
   #
 
 <br/><br/><br/><br/>
-# 사용상법 및 동작 영상
-참고 링크 :  https://vueron.atlassian.net/wiki/spaces/Vueron/pages/196378826/Merge+Lidar
-
-
 
 <br/>
 <br/><br/><br/>
